@@ -132,7 +132,8 @@ class ConnectionBPM:
 
     
 class Process:
-  def __init__(self, processid: str, connection: ConnectionBPM):
+  def __init__(self, processid: str, connection: ConnectionBPM,
+               startstructure:list[str]):
     self.pid = processid
     self.connection = connection
     self.headers = connection.headers
@@ -140,6 +141,8 @@ class Process:
 
     self.structures = {}
     self.clearbody()
+
+    self.setstartstructure(startstructure)
 
   def setstructure(self, name:str, structure:list[str]):
     self.structures[name] = structure

@@ -7,5 +7,5 @@ PYZAGI is a handler for Bizagi BPM ODATA API
 from .pz import *
 
 
-_version = "0.5a"
+_version = "0.0.5"
 version = "PYZAGI ver. " + _version + "\n2023\n"

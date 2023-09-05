@@ -1,6 +1,6 @@
 import sys
 sys.path.append('D:/GitHub/')
-from pyzagi import *
+from pyzagi.src import *
 
 
 # === Test ===
@@ -13,14 +13,14 @@ bizagibpm = ConnectionBPM(
 	clientsecret
 )
 simpleRequest = Process(
-  'a88c3aab-a94b-49c5-b83b-5b845d721d86',
-  bizagibpm
+  processid = 'a88c3aab-a94b-49c5-b83b-5b845d721d86',
+  connection = bizagibpm,
+  startstructure = [
+    "Simplerequest.Requestdata.Startdate",
+    "Simplerequest.Requestdata.Enddate",
+    "Simplerequest.Requestdata.Commentary",
+  ]
 ) 
-simpleRequest.setstartstructure([
-  "Simplerequest.Requestdata.Startdate",
-  "Simplerequest.Requestdata.Enddate",
-  "Simplerequest.Requestdata.Commentary",
-])
 
 simpleRequest.start([
   "2023-08-28",
@@ -45,7 +45,7 @@ simpleRequest.start([
            
 #       ]
 #     }  					
-# print(bizagibpm.post_start(body = body_simpleRequest))
+
 
 # print(oneprocess(headers,'939babe9-54ac-47de-b692-1a29b16dbb14'))
 
