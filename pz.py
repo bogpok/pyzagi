@@ -1,4 +1,7 @@
 import requests
+import json
+
+from .pztools import createbody
 
 class ConnectionBPM:
   def __init__(self, baseURL, clientid, clientsecret):
@@ -35,7 +38,7 @@ class ConnectionBPM:
                            auth=self.auth)    
     self.BTOKEN = f"Bearer {tokenr.json()['access_token']}" 
     
-  def getprocesses(self, lookupid = -1):
+  def get_processes(self, lookupid = -1):
       r = requests.get(self.baseURL+self.endpoints['getprocesses'],
                        headers=self.headers)
       pr_names = ''
@@ -56,7 +59,7 @@ class ConnectionBPM:
       print()
       return pr_names
 
-  def oneprocess(self, prid='a88c3aab-a94b-49c5-b83b-5b845d721d86'):    
+  def get_oneprocess(self, prid='a88c3aab-a94b-49c5-b83b-5b845d721d86'):    
       end = f'processes({prid})'
       link = self.baseURL+'odata/metadata/' + end
       r = requests.get(link,
@@ -64,7 +67,7 @@ class ConnectionBPM:
       print(r.text)
 
 
-  def getents(self):    
+  def get_ents(self):    
       end = self.endpoints['entities']
       link = self.baseURL + end
       r = requests.get(link,
@@ -88,7 +91,7 @@ class ConnectionBPM:
                       headers=self.headers)    
     return r.text
 
-  def getrelatedents(self, processid = 'a88c3aab-a94b-49c5-b83b-5b845d721d86'):
+  def get_relatedents(self, processid = 'a88c3aab-a94b-49c5-b83b-5b845d721d86'):
     end = f'/odata/data/processes({processid})/relatedEntities'
     r = requests.get(self.baseURL+end,
                       headers=self.headers)    
@@ -112,22 +115,50 @@ class ConnectionBPM:
   #   return r.text
 
 
-  def post_start(self, processid = 'a88c3aab-a94b-49c5-b83b-5b845d721d86', body = ''):
-    import json
-    headers = self.headers
-    headers['Content-Type'] = 'application/json'
+  def post_start(self, processid, body, headers=None):
+    if headers is None:
+      headers = self.headers
+      headers['Content-Type'] = 'application/json'
+
 
     end = f'/odata/data/processes({processid})/start'
-    print('\n=> starting: ', end)
-    spainid = "c8127415-66c3-45a3-b6ce-af99fe146a00"
-    madridid = "87f59e55-ad84-4a64-b8d8-f9a3dbe051a7"
+    print('\n=> starting: ', end)    
     
     r = requests.post(self.baseURL+end,
                       data=json.dumps(body),
                       headers=headers)    
     return r.text
 
+
     
+class Process:
+  def __init__(self, processid: str, connection: ConnectionBPM):
+    self.pid = processid
+    self.connection = connection
+    self.headers = connection.headers
+    self.headers['Content-Type'] = 'application/json'
+
+    self.structures = {}
+    self.clearbody()
+
+  def setstructure(self, name:str, structure:list[str]):
+    self.structures[name] = structure
+
+  def setstartstructure(self, structure:list[str]):
+    self.setstructure('start', structure)
+
+  def setstartbody(self, values:list[str]):
+    self.body = createbody("startParameters", self.structures['start'], values)
+
+  def clearbody(self):
+    self.body = ""
+
+  def start(self, values:list[str]):
+    self.setstartbody(values)
+    print(self.connection.post_start(processid=self.pid, body=self.body, headers=self.headers))
+
+    self.clearbody()
+
 
 
   
