@@ -21,21 +21,24 @@ class ConnectionBPM:
     }
 
     print('\n=> Initiating connection to Bizagi BPM...\n')
+    try:
+      self._gettoken()  
+    except:
+      raise ConnectionError('\n\tSomething went wrong with the connection.\n\tCheck the baseURL and BIZAGI server availability') 
+    else:
+      self.headers = {
+          "Authorization": self.BTOKEN
+      }
+      print('\n=> Successfully connected to Bizagi.')
 
-    self._gettoken()    
-    self.headers = {
-        "Authorization": self.BTOKEN
-    }
-
-    print('\n=> Successfully connected to Bizagi.')
   def _gettoken(self):
     body = {
         'grant_type':'client_credentials',
         'scope':'api'
-    }
+    }  
     tokenr = requests.post(self.baseURL+self.endpoints['token'],
-                           data=body,
-                           auth=self.auth)    
+                               data=body,
+                               auth=self.auth)   
     self.BTOKEN = f"Bearer {tokenr.json()['access_token']}" 
     
   def get_processes(self, lookupid = -1):
@@ -97,29 +100,10 @@ class ConnectionBPM:
                       headers=self.headers)    
     return r.text
 
-  # def post_StartTAMS(headers):
-  #   import json
-  #   headers['Content-Type'] = 'application/json'
-  #   end = 'odata/data/processes(939babe9-54ac-47de-b692-1a29b16dbb14)/start'
-  #   print('\n=> starting: ', end)
-  #   params = []
-  #   body = {
-  #     "startParameters": [
-         
-  #     ]
-  #   }  
-  #   r = requests.post(baseURL+end,
-  #                     data=json.dumps(body),
-  #                     headers=headers)   
-       
-  #   return r.text
-
-
   def post_start(self, processid, body, headers=None):
     if headers is None:
       headers = self.headers
       headers['Content-Type'] = 'application/json'
-
 
     end = f'/odata/data/processes({processid})/start'
     print('\n=> starting: ', end)    
@@ -164,7 +148,22 @@ class Process:
 
 
 
-  
+# def post_StartTAMS(headers):
+#   import json
+#   headers['Content-Type'] = 'application/json'
+#   end = 'odata/data/processes(939babe9-54ac-47de-b692-1a29b16dbb14)/start'
+#   print('\n=> starting: ', end)
+#   params = []
+#   body = {
+#     "startParameters": [
+       
+#     ]
+#   }  
+#   r = requests.post(baseURL+end,
+#                     data=json.dumps(body),
+#                     headers=headers)   
+     
+#   return r.text  
 
 
 
