@@ -11,7 +11,7 @@
 __title__ = "pyzagi"
 __description__ = "PYZAGI is a handler for Bizagi BPM ODATA API."
 __url__ = "https://github.com/bogpok/pyzagi"
-__version__ = "0.0.6"
+__version__ = "0.1.0"
 __author__ = "Bogdan Pokrepin"
 __author_email__ = "pokrepin@google.com"
 __license__ = "MIT License"

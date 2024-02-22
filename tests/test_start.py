@@ -1,10 +1,11 @@
-import sys
 # This is to test local code before commit/push/release
+
+import sys
 sys.path.append('D:/GitHub/pyzagi')
 from src.pyzagi.__init__ import (
   __version__,
    ConnectionBPM,
-    Process
+    ProcessBPM
 )
 
 print(__version__)
@@ -18,7 +19,7 @@ bizagibpm = ConnectionBPM(
 	clientid,
 	clientsecret
 )
-simpleRequest = Process(
+simpleRequest = ProcessBPM(
   processid = 'a88c3aab-a94b-49c5-b83b-5b845d721d86',
   connection = bizagibpm,
   startstructure = [

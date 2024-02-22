@@ -10,7 +10,7 @@
 """
 PYZAGI is a handler for Bizagi BPM ODATA API
 
-2023 Bogdan Pokrepin
+2024 Bogdan Pokrepin
 """
 from .__version__ import (
 	__title__,
@@ -20,8 +20,7 @@ from .__version__ import (
     __author__,
     __author_email__,
     __license__,
-    __copyright__,
-    
+    __copyright__,    
 )
 from .pz import *
 
