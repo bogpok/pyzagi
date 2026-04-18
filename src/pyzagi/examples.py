@@ -1,4 +1,5 @@
 """
+DEPRICATED
 Bizagi OUTPUT/RESPONSE EXAMPLES
 Results of PYZAGI usage
 

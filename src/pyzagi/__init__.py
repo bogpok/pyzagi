@@ -23,5 +23,6 @@ from .__version__ import (
     __copyright__,    
 )
 from .pz import *
-
+from .pz_connectionbpm import ConnectionBPM
+from .pz_services_bizapi import BizagiServicesFactory
 

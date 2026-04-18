@@ -1,21 +1,21 @@
+"""decpricated"""
 import requests
-import json
 from typing import Union
 
-from .pztools import createbody
+from .pz_tools import *
 
 class EnvironmentBPM:
-  """
-  Describes environment setup
-  client : dict
-  keys REQUIRED -> "id", "secret", "username"
-  """
-  def __init__(self, name: str, baseURL: str, client: dict):
-    self.name = name
-    self.baseURL = baseURL
-    self.client = client
-  def print_info(self):
-    print(self.name, self.baseURL, self.client)
+	"""
+	Describes environment setup
+	client : dict
+	keys REQUIRED -> "id", "secret", "username"
+	"""
+	def __init__(self, name: str, baseURL: str, client: dict):
+		self.name = name
+		self.baseURL = baseURL
+		self.client = client
+	def print_info(self):
+		print(self.name, self.baseURL, self.client)
 
 class ConnectionBPM:
   """
@@ -43,6 +43,7 @@ class ConnectionBPM:
       # DATA
       'entities': "/odata/data/entities",
       'cases': "/odata/data/cases",
+      'schema':'/odata/data/$metadata'
     }
 
     print('\n=> Initiating connection to Bizagi BPM...')
@@ -56,9 +57,22 @@ class ConnectionBPM:
       }
     print('Successfully connected to', baseURL, "\n")
 
+  def request_handler(self, endpoint: str):
+        try:
+            print("making " + endpoint + " request")
+            r = requests.get(self.baseURL+endpoint,
+                     headers=self.headers)   
+            return r, r.status_code
+
+        except:
+            print("EXCEPTION")
+
+  
 
   # GETS
   def _gettoken(self):
+    # T
+    """ Receive token and put it into attribute of this class"""
     body = {
         'grant_type':'client_credentials',
         'scope':'api'
@@ -133,6 +147,7 @@ class ConnectionBPM:
     else:
       return r.json()["value"]
 
+  # STANDALONE ENTITIES
   def get_entities(self, entityid = None):    
       """DATA/ENTITIES
       """      
@@ -148,7 +163,17 @@ class ConnectionBPM:
                         headers=self.headers) 
         return r.json()
       
-  def search_entity(self, names):
+  def get_entity_object(self, index: int, Model) -> object:
+    """
+    returns StandaloneEntityBPM by index provided from array of entities
+    to check index first run get_entities()!
+    """
+    entity_json = self.get_entities()[index]    
+    entity_json['odataid'] = entity_json['@odata.id']
+    del entity_json['@odata.id']    
+    return Model(**entity_json, connection=self)
+      
+  def search_f_entity(self, names):
       """Find entity by keyword in a name"""      
       entities = self.get_entities()
       for ent in entities:    
@@ -164,11 +189,20 @@ class ConnectionBPM:
     r = requests.get(link,
                      headers=self.headers)    
     return r.json()
+  
+  def get_entity_createparams(self, entityid):
+    link = self.baseURL + self.endpoints['entities'] + f'({entityid})/creationParameters'    
+    r = requests.get(link,
+                     headers=self.headers)    
+    return r.json()["value"]
+  # STANDALONE ENTITIES
 
+  # CASES
   def get_cases(self, caseid: Union[str, int] = None):
     """ DATA/CASES
     Shows inbox for authenticated user
     or info from one case if caseid is specified
+    T
     """
     if caseid != None:
       # caseid should be str or int, eg. 101 or "101"
@@ -188,6 +222,8 @@ class ConnectionBPM:
     r = requests.get(link,
                       headers=self.headers)  
     return r.json()    
+  
+
 
   def get_workitems(self, caseid: Union[str, int], workitemid: Union[str, int] = None):
     # caseid should be str or int, eg. 101 or "101"
@@ -272,11 +308,12 @@ class ConnectionBPM:
       return r.json()
     
   def get_case_navigations(self, caseid):
+    # =c
     link = self.baseURL + self.endpoints['cases'] + f"({caseid})" + "/navigations"
     r = requests.get(link,
                       headers=self.headers) 
     return r.json()
-  
+  # CASES
   
 
 
@@ -316,6 +353,19 @@ class ConnectionBPM:
     print(f"=> Advancing case-{caseid} with workitem-{workitemid}")
 
     return self._post_handler(link, body, headers)
+  
+  def post_ent_value_create(self, entityid: str, body, headers=None):
+    """ create new value for entity """
+    if headers is None:
+      headers = self.headers
+      headers['Content-Type'] = 'application/json'
+    
+    link = self.baseURL + self.endpoints['entities'] + \
+            f"({entityid})/create"
+    print(f"=> Create new value for entity-{entityid}")
+
+    return self._post_handler(link, body, headers)
+
     
   
     
@@ -377,13 +427,6 @@ class EntityBPM:
     
     self.values = {}
     self.load_values()
-
-  def get_values(self):
-    """
-    Get values for entity: https://dev-demo1-mdcloud.bizagi.com//odata/data/entities(761dd1a6-af51-477e-baf7-dea0b7d0305c)/values
-    {'code': '500', 'type': 'ODataException', 'status': 'InternalServerError', 'message': 'Entity metadata not found. Entity ID: -1.'}
-    """
-    return self.parentProcess.connection.get_entity_values(self.id)
   
   def get_rel_values(self):
     # print(f"\nRelated values for ({self.name}):")
@@ -398,5 +441,36 @@ class EntityBPM:
 
 
 
+class StandaloneEntityBPM:
+  def __init__(self, id, name, type, displayName, odataid, template, connection: ConnectionBPM): 
+    self.id = id
+    self.name = name
+    self.entitytype = type
+    self.displayname = displayName
+    
+    self.odataid = odataid
+    self.connection = connection
+    self.template = template
 
-
+    self.set_structure()
+  
+  def get_values(self) -> None:
+    json_print_pretty(self.connection.get_entity_values(self.id))
+  
+  def get_createparams(self, show = False) -> list:
+    params_json = self.connection.get_entity_createparams(self.id)
+    if show:
+      json_print_pretty(params_json)
+    params_asstructure = []
+    for param_j in params_json:
+      params_asstructure.append(param_j['xpath'])
+    return params_asstructure
+  
+  def set_structure(self):
+    self.structure = self.get_createparams()
+  
+  def post_create(self, values: list):
+    body = createbody(["startParameters"],
+                      self.structure,
+                      values)
+    self.connection.post_ent_value_create(self.id, body)
